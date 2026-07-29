@@ -1,13 +1,13 @@
 [build-system]
 requires = ["setuptools>=68.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "gshortcut-portal"
 version = "0.1.0"
 description = "Python library for the Wayland Global Shortcut Portal (xdg-desktop-portal)"
 readme = "README.md"
-license = { text = "AGPL-3.0-only" }
+license = "AGPL-3.0-only"
 authors = [
     { name = "marvin1099", email = "marvin1099@noreply.codeberg.org" },
 ]
@@ -19,19 +19,28 @@ keywords = ["wayland", "global-shortcuts", "xdg-desktop-portal", "hotkeys"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Topic :: Desktop Environment :: Wayland",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [project.urls]
 Homepage = "https://codeberg.org/marvin1099/python-global-shortcut-portal"
 Repository = "https://codeberg.org/marvin1099/python-global-shortcut-portal"
-Documentation = "https://codeberg.org/marvin1099/python-global-shortcut-portal"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.25",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

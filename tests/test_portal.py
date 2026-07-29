@@ -1,11 +1,20 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from dbus_next import Variant
 
-from gshortcut_portal.exceptions import PortalCallError, PortalResponseError, SessionError
+from gshortcut_portal.exceptions import (
+    PortalCallError,
+    PortalResponseError,
+    SessionError,
+)
+from gshortcut_portal.models import BoundShortcut, Shortcut, ShortcutEvent
 from gshortcut_portal.portal import Portal
-from gshortcut_portal.session import GlobalShortcutsSession, SessionCallback
-from gshortcut_portal.models import Shortcut, BoundShortcut, ShortcutEvent
+from gshortcut_portal.session import (
+    GlobalShortcutsSession,
+    SessionCallback,
+    _unwrap_options,
+)
 
 
 def _fake_msg(body, path="", interface="", member="", msg_type=1):
@@ -118,16 +127,17 @@ class TestPortalCalls:
     async def test_bind_shortcuts(self, connected_portal):
         connected_portal._await_response.return_value = {
             "shortcuts": [
-                ("toggle", {
-                    "description": "Toggle it",
-                    "trigger_description": "Ctrl+T",
-                }),
+                (
+                    "toggle",
+                    {
+                        "description": "Toggle it",
+                        "trigger_description": "Ctrl+T",
+                    },
+                ),
             ]
         }
         shortcuts = [("toggle", {"description": "Toggle it"})]
-        result = await connected_portal.bind_shortcuts(
-            "/session/test", shortcuts
-        )
+        result = await connected_portal.bind_shortcuts("/session/test", shortcuts)
         assert len(result) == 1
         assert result[0][0] == "toggle"
 
@@ -163,33 +173,40 @@ class TestSessionLifecycle:
             return_value="/org/freedesktop/portal/session/test1"
         )
         # Simulate bind_shortcuts returning bound shortcuts
-        connected_portal.bind_shortcuts = AsyncMock(return_value=[
-            ("toggle", {
-                "description": "Toggle sidebar",
-                "trigger_description": "Press Ctrl+Alt+T",
-            }),
-        ])
+        connected_portal.bind_shortcuts = AsyncMock(
+            return_value=[
+                (
+                    "toggle",
+                    {
+                        "description": "Toggle sidebar",
+                        "trigger_description": "Press Ctrl+Alt+T",
+                    },
+                ),
+            ]
+        )
 
         session = GlobalShortcutsSession(connected_portal)
         await session.connect()
         assert session.handle == "/org/freedesktop/portal/session/test1"
         assert session.connected is True
 
-        bound = await session.bind([
-            Shortcut("toggle", "Toggle sidebar"),
-        ])
+        bound = await session.bind(
+            [
+                Shortcut("toggle", "Toggle sidebar"),
+            ]
+        )
         assert len(bound) == 1
         assert bound[0].id == "toggle"
         assert bound[0].trigger_description == "Press Ctrl+Alt+T"
 
     @pytest.mark.asyncio
     async def test_list_and_configure(self, connected_portal):
-        connected_portal.create_session = AsyncMock(
-            return_value="/session/t2"
+        connected_portal.create_session = AsyncMock(return_value="/session/t2")
+        connected_portal.list_shortcuts = AsyncMock(
+            return_value=[
+                ("first", {"description": "First", "trigger_description": "Ctrl+F"}),
+            ]
         )
-        connected_portal.list_shortcuts = AsyncMock(return_value=[
-            ("first", {"description": "First", "trigger_description": "Ctrl+F"}),
-        ])
         connected_portal.configure_shortcuts = AsyncMock()
 
         session = GlobalShortcutsSession(connected_portal)
@@ -204,9 +221,7 @@ class TestSessionLifecycle:
 
     @pytest.mark.asyncio
     async def test_register_app_id(self, connected_portal):
-        connected_portal.create_session = AsyncMock(
-            return_value="/session/t3"
-        )
+        connected_portal.create_session = AsyncMock(return_value="/session/t3")
         connected_portal.register = AsyncMock()
 
         session = GlobalShortcutsSession(connected_portal, app_id="org.example.App")
@@ -216,9 +231,7 @@ class TestSessionLifecycle:
 
     @pytest.mark.asyncio
     async def test_close_session(self, connected_portal):
-        connected_portal.create_session = AsyncMock(
-            return_value="/session/t4"
-        )
+        connected_portal.create_session = AsyncMock(return_value="/session/t4")
         connected_portal.close_session = AsyncMock()
 
         session = GlobalShortcutsSession(connected_portal)
@@ -248,10 +261,13 @@ class TestCallback:
 
 class TestBoundShortcutConversion:
     def test_from_dbus_pair_full(self):
-        pair = ("my-id", {
-            "description": "My Shortcut",
-            "trigger_description": "Ctrl+Alt+X",
-        })
+        pair = (
+            "my-id",
+            {
+                "description": "My Shortcut",
+                "trigger_description": "Ctrl+Alt+X",
+            },
+        )
         bs = BoundShortcut.from_dbus_pair(pair)
         assert bs.id == "my-id"
         assert bs.description == "My Shortcut"
@@ -272,18 +288,38 @@ class TestShortcutModel:
 
     def test_to_dbus_tuple_with_trigger(self):
         s = Shortcut(id="test", description="Test", preferred_trigger="CTRL+ALT+a")
-        assert s.to_dbus_tuple() == ("test", {
-            "description": "Test",
-            "preferred_trigger": "CTRL+ALT+a",
-        })
+        assert s.to_dbus_tuple() == (
+            "test",
+            {
+                "description": "Test",
+                "preferred_trigger": "CTRL+ALT+a",
+            },
+        )
+
+
+class TestUnwrapOptions:
+    def test_none(self):
+        assert _unwrap_options(None) == {}
+
+    def test_empty(self):
+        assert _unwrap_options({}) == {}
+
+    def test_plain_dict(self):
+        assert _unwrap_options({"a": "1", "b": "2"}) == {"a": "1", "b": "2"}
+
+    def test_with_variants(self):
+        result = _unwrap_options(
+            {
+                "activation_token": Variant("s", "tok123"),
+            }
+        )
+        assert result == {"activation_token": "tok123"}
 
 
 class TestSignalHandlers:
     @pytest.mark.asyncio
     async def test_activated_dispatched(self, connected_portal):
-        connected_portal.create_session = AsyncMock(
-            return_value="/session/sig1"
-        )
+        connected_portal.create_session = AsyncMock(return_value="/session/sig1")
         events = []
 
         class Callback(SessionCallback):
@@ -293,7 +329,6 @@ class TestSignalHandlers:
         session = GlobalShortcutsSession(connected_portal, callback=Callback())
         await session.connect()
 
-        # Simulate the portal firing Activated
         session._on_activated(
             "/session/sig1",
             "my-shortcut",
@@ -303,3 +338,109 @@ class TestSignalHandlers:
         assert len(events) == 1
         assert events[0].shortcut_id == "my-shortcut"
         assert events[0].timestamp == 123456
+
+    @pytest.mark.asyncio
+    async def test_activated_unwraps_variants(self, connected_portal):
+        connected_portal.create_session = AsyncMock(return_value="/session/sig2")
+        events = []
+
+        class Callback(SessionCallback):
+            def on_activated(self, event):
+                events.append(event)
+
+        session = GlobalShortcutsSession(connected_portal, callback=Callback())
+        await session.connect()
+
+        session._on_activated(
+            "/session/sig2",
+            "my-shortcut",
+            123456,
+            {"activation_token": Variant("s", "tok123")},
+        )
+        assert events[0].options == {"activation_token": "tok123"}
+
+    @pytest.mark.asyncio
+    async def test_deactivated_unwraps_variants(self, connected_portal):
+        connected_portal.create_session = AsyncMock(return_value="/session/sig3")
+        events = []
+
+        class Callback(SessionCallback):
+            def on_deactivated(self, event):
+                events.append(event)
+
+        session = GlobalShortcutsSession(connected_portal, callback=Callback())
+        await session.connect()
+
+        session._on_deactivated(
+            "/session/sig3",
+            "my-shortcut",
+            123456,
+            {"activation_token": Variant("s", "tok456")},
+        )
+        assert events[0].options == {"activation_token": "tok456"}
+
+    @pytest.mark.asyncio
+    async def test_shortcuts_changed_unwraps_variants(self, connected_portal):
+        connected_portal.create_session = AsyncMock(return_value="/session/sig4")
+        shortcuts_list = []
+
+        class Callback(SessionCallback):
+            def on_shortcuts_changed(self, session, shortcuts):
+                shortcuts_list.extend(shortcuts)
+
+        session = GlobalShortcutsSession(connected_portal, callback=Callback())
+        await session.connect()
+
+        session._on_shortcuts_changed(
+            "/session/sig4",
+            [
+                [
+                    "toggle",
+                    {
+                        "description": Variant("s", "Toggle it"),
+                        "trigger_description": Variant("s", "Ctrl+T"),
+                    },
+                ],
+            ],
+        )
+        assert len(shortcuts_list) == 1
+        assert shortcuts_list[0].id == "toggle"
+        assert shortcuts_list[0].trigger_description == "Ctrl+T"
+
+
+class TestMessageBody:
+    @pytest.mark.asyncio
+    async def test_bind_shortcuts_uses_lists_for_structs(self, portal, mock_bus):
+        mock_bus.call.return_value = _fake_msg(["/request/path"])
+        portal._bus = mock_bus
+        portal._connected = True
+        portal._unique_name = ":1.123"
+        portal._await_response = AsyncMock(return_value={"shortcuts": []})
+
+        await portal.bind_shortcuts(
+            "/session/test",
+            [("toggle", {"description": "Test"})],
+        )
+
+        msg = mock_bus.call.call_args[0][0]
+        dbus_shortcuts = msg.body[1]
+        assert len(dbus_shortcuts) == 1
+        assert isinstance(dbus_shortcuts[0], list), (
+            "each D-Bus struct must be a list, not tuple"
+        )
+        assert dbus_shortcuts[0][0] == "toggle"
+
+
+class TestCloseSessionSubscriptions:
+    @pytest.mark.asyncio
+    async def test_close_clears_subscribers(self, connected_portal):
+        connected_portal.create_session = AsyncMock(return_value="/session/cu1")
+        connected_portal.close_session = AsyncMock()
+
+        session = GlobalShortcutsSession(connected_portal)
+        await session.connect()
+
+        assert len(session._unsubscribers) == 3
+
+        await session.close()
+        assert len(session._unsubscribers) == 0

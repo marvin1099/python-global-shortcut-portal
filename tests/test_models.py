@@ -1,6 +1,6 @@
-from gshortcut_portal.models import Shortcut, BoundShortcut
-from gshortcut_portal.utils import parse_shortcut_trigger, format_shortcut_trigger
 from gshortcut_portal.exceptions import PortalResponseError
+from gshortcut_portal.models import BoundShortcut, Shortcut
+from gshortcut_portal.utils import format_shortcut_trigger, parse_shortcut_trigger
 
 
 class TestShortcutModel:
@@ -12,16 +12,22 @@ class TestShortcutModel:
     def test_to_dbus_tuple_with_trigger(self):
         s = Shortcut(id="test", description="Test", preferred_trigger="CTRL+ALT+a")
         result = s.to_dbus_tuple()
-        assert result == ("test", {
-            "description": "Test",
-            "preferred_trigger": "CTRL+ALT+a",
-        })
+        assert result == (
+            "test",
+            {
+                "description": "Test",
+                "preferred_trigger": "CTRL+ALT+a",
+            },
+        )
 
     def test_bound_shortcut_from_dbus_pair(self):
-        pair = ("my-id", {
-            "description": "My Shortcut",
-            "trigger_description": "Press Control+Alt+A",
-        })
+        pair = (
+            "my-id",
+            {
+                "description": "My Shortcut",
+                "trigger_description": "Press Control+Alt+A",
+            },
+        )
         bs = BoundShortcut.from_dbus_pair(pair)
         assert bs.id == "my-id"
         assert bs.description == "My Shortcut"

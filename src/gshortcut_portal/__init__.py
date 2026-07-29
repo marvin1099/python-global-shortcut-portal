@@ -1,24 +1,25 @@
-from gshortcut_portal.models import Shortcut, BoundShortcut, ShortcutEvent
-from gshortcut_portal.session import GlobalShortcutsSession, SessionCallback
-from gshortcut_portal.portal import Portal
 from gshortcut_portal.exceptions import (
-    PortalError,
     PortalCallError,
+    PortalError,
     PortalResponseError,
     SessionError,
-    ShortcutError,
 )
+from gshortcut_portal.models import BoundShortcut, Shortcut, ShortcutEvent
+from gshortcut_portal.portal import Portal
+from gshortcut_portal.session import GlobalShortcutsSession, SessionCallback
+from gshortcut_portal.utils import format_shortcut_trigger, parse_shortcut_trigger
 
 __all__ = [
-    "GlobalShortcutsSession",
-    "SessionCallback",
-    "Portal",
-    "Shortcut",
     "BoundShortcut",
-    "ShortcutEvent",
-    "PortalError",
+    "GlobalShortcutsSession",
+    "Portal",
     "PortalCallError",
+    "PortalError",
     "PortalResponseError",
+    "SessionCallback",
     "SessionError",
-    "ShortcutError",
+    "Shortcut",
+    "ShortcutEvent",
+    "format_shortcut_trigger",
+    "parse_shortcut_trigger",
 ]

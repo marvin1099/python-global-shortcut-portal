@@ -1,9 +1,24 @@
+# Byte-compiled
 __pycache__/
-.pytest_cache/
 *.pyc
 *.pyo
-*.egg-info/
+*.so
+
+# Build artifacts
 dist/
 build/
+*.egg-info/
+
+# Dependencies
+uv.lock
 .venv/
 venv/
+
+# Cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Coverage
+.coverage*
+htmlcov/
