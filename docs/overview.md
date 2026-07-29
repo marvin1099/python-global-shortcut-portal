@@ -1,6 +1,6 @@
 # Overview
 
-`gshortcut-portal` is a pure-Python async library for the
+`global-shortcut-portal` is a pure-Python async library for the
 [`org.freedesktop.portal.GlobalShortcuts`](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html)
 D-Bus interface. It lets any application register global keyboard shortcuts on
 Wayland without X11 key grabbing or platform-specific APIs.
@@ -17,7 +17,7 @@ Wayland without X11 key grabbing or platform-specific APIs.
 ```
 Your app (Python)
     ↕
-This library (gshortcut-portal)
+This library (global-shortcut-portal)
     ↕ D-Bus
 xdg-desktop-portal
     ↕

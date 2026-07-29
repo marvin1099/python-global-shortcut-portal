@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "gshortcut-portal"
+name = "global-shortcut-portal"
 version = "0.1.0"
 description = "Python library for the Wayland Global Shortcut Portal (xdg-desktop-portal)"
 readme = "README.md"

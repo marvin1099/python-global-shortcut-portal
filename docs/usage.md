@@ -4,7 +4,7 @@
 
 ```python
 import asyncio
-from gshortcut_portal import Portal, GlobalShortcutsSession, Shortcut, SessionCallback
+from global_shortcut_portal import Portal, GlobalShortcutsSession, Shortcut, SessionCallback
 
 class MyCallback(SessionCallback):
     def on_activated(self, event):
@@ -162,7 +162,7 @@ Examples:
 The utility module provides helpers:
 
 ```python
-from gshortcut_portal import parse_shortcut_trigger, format_shortcut_trigger
+from global_shortcut_portal import parse_shortcut_trigger, format_shortcut_trigger
 
 parsed = parse_shortcut_trigger("Ctrl+Shift+G")
 # (frozenset({"CTRL", "SHIFT"}), "G")

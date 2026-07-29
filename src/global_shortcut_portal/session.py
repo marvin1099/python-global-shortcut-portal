@@ -9,10 +9,10 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
-from gshortcut_portal.exceptions import SessionError
-from gshortcut_portal.models import BoundShortcut, Shortcut, ShortcutEvent
-from gshortcut_portal.portal import Portal
-from gshortcut_portal.utils import generate_handle_token
+from global_shortcut_portal.exceptions import SessionError
+from global_shortcut_portal.models import BoundShortcut, Shortcut, ShortcutEvent
+from global_shortcut_portal.portal import Portal
+from global_shortcut_portal.utils import generate_handle_token
 
 logger = logging.getLogger(__name__)
 

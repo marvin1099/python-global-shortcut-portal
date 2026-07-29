@@ -1,6 +1,6 @@
-from gshortcut_portal.exceptions import PortalResponseError
-from gshortcut_portal.models import BoundShortcut, Shortcut
-from gshortcut_portal.utils import format_shortcut_trigger, parse_shortcut_trigger
+from global_shortcut_portal.exceptions import PortalResponseError
+from global_shortcut_portal.models import BoundShortcut, Shortcut
+from global_shortcut_portal.utils import format_shortcut_trigger, parse_shortcut_trigger
 
 
 class TestShortcutModel:

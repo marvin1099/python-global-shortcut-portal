@@ -13,7 +13,7 @@ from collections.abc import Callable
 from dbus_next import Message, MessageType, Variant
 from dbus_next.aio import MessageBus
 
-from gshortcut_portal.exceptions import PortalCallError, PortalResponseError
+from global_shortcut_portal.exceptions import PortalCallError, PortalResponseError
 
 logger = logging.getLogger(__name__)
 

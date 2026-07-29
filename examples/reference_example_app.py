@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Reference example app for gshortcut-portal.
+Reference example app for global-shortcut-portal.
 
 Demonstrates the full lifecycle of a GlobalShortcuts session using the
 xdg-desktop-portal GlobalShortcuts protocol on Wayland.
@@ -31,7 +31,7 @@ import sys
 import termios
 import tty
 
-from gshortcut_portal import (
+from global_shortcut_portal import (
     BoundShortcut,
     GlobalShortcutsSession,
     Portal,

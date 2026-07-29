@@ -1,7 +1,7 @@
-# gshortcut-portal
+# global-shortcut-portal
 
 A pure-Python library for the Wayland **Global Shortcut Portal** (`org.freedesktop.portal.GlobalShortcuts`).  
-Lets any application register and receive global keyboard shortcuts on Wayland — without X11 key grabbing.
+Lets any application register and receive global keyboard shortcuts on Wayland, without X11 key grabbing.
 
 AI was used heavily during development, with human review and testing of all code.  
 This is a personal library I wanted and I'm sharing it in case it's useful to others.
@@ -16,7 +16,7 @@ This is a personal library I wanted and I'm sharing it in case it's useful to ot
 ## Installation
 
 ```bash
-pip install gshortcut-portal
+pip install global-shortcut-portal
 ```
 
 > On systems with an externally managed environment (e.g. recent Debian/Ubuntu,
@@ -24,7 +24,7 @@ pip install gshortcut-portal
 > environment. Alternatively, install with `uv`:
 >
 > ```bash
-> uv pip install gshortcut-portal
+> uv pip install global-shortcut-portal
 > ```
 >
 > For development, clone the repo and run:
@@ -60,7 +60,7 @@ python examples/reference_example_app.py
 
 ```python
 import asyncio
-from gshortcut_portal import GlobalShortcutsSession, Portal, Shortcut, SessionCallback
+from global_shortcut_portal import GlobalShortcutsSession, Portal, Shortcut, SessionCallback
 
 class MyCallback(SessionCallback):
     def on_activated(self, event):

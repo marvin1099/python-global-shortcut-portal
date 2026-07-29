@@ -3,14 +3,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from dbus_next import Variant
 
-from gshortcut_portal.exceptions import (
+from global_shortcut_portal.exceptions import (
     PortalCallError,
     PortalResponseError,
     SessionError,
 )
-from gshortcut_portal.models import BoundShortcut, Shortcut, ShortcutEvent
-from gshortcut_portal.portal import Portal
-from gshortcut_portal.session import (
+from global_shortcut_portal.models import BoundShortcut, Shortcut, ShortcutEvent
+from global_shortcut_portal.portal import Portal
+from global_shortcut_portal.session import (
     GlobalShortcutsSession,
     SessionCallback,
     _unwrap_options,
@@ -43,7 +43,7 @@ def mock_bus():
 
 @pytest.fixture
 def portal(mock_bus):
-    patcher = patch("gshortcut_portal.portal.MessageBus", return_value=mock_bus)
+    patcher = patch("global_shortcut_portal.portal.MessageBus", return_value=mock_bus)
     patcher.start()
     p = Portal()
     yield p
