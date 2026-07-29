@@ -29,7 +29,7 @@ pip install global-shortcut-portal
 >
 > For development, clone the repo and run:
 > ```bash
-> uv sync
+> uv sync --group dev
 > ```
 
 ## Reference Example
