@@ -1,6 +1,6 @@
 """High-level session abstraction over the Global Shortcut portal.
 
-Provides a convenient async API to create a portal session, bind/unbind
+Provides a convenient async API to create a portal session, bind
 shortcuts, and react to activation/deactivation events through a callback.
 """
 
@@ -126,18 +126,6 @@ class GlobalShortcutsSession:
 
         bound = [BoundShortcut.from_dbus_pair(r) for r in result]
         return bound
-
-    async def unbind_all(self) -> None:
-        """Unbind all session-level shortcuts.
-
-        On GNOME this clears the session. On Plasma/KDE, shortcuts are persisted per
-        *app_id* — session-level unbinding has no visible effect. To fully clear
-        persistent entries on Plasma, quit the app and remove them in
-        System Settings > Keyboard > Shortcuts.
-        """
-        if not self._handle:
-            raise SessionError("Session not created yet")
-        await self._portal.bind_shortcuts(self._handle, [], "")
 
     async def list_shortcuts(self) -> list[BoundShortcut]:
         """Retrieve all currently bound shortcuts for this session."""

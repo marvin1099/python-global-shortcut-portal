@@ -35,15 +35,18 @@ pip install global-shortcut-portal
 ## Reference Example
 
 The repository includes a fully-commented reference app at
-[`examples/reference_example_app.py`](examples/reference_example_app.py) that demonstrates the
+[`examples/reference_example_app.py`](https://codeberg.org/marvin1099/python-global-shortcut-portal/src/branch/main/examples/reference_example_app.py) that demonstrates the
 complete session lifecycle with interactive controls:
 
 | Key | Action |
 |-----|--------|
 | `b` | Bind example shortcuts with default triggers |
+| `a` | Grow the list: bind a third shortcut (resets session) |
+| `f` | Force empty: two reset+bind rounds that remove shortcuts |
 | `e` | Register shortcuts without triggers |
+| `l` | List bound shortcuts |
 | `c` | Open the native config dialog |
-| `r` | Reset the session |
+| `r` | Reset the session (needed before re-binding) |
 | `q` | Quit |
 
 ```bash
@@ -54,13 +57,19 @@ python examples/reference_example_app.py
 
 - [docs/overview.md](docs/overview.md) — the Global Shortcut Portal and this library
 - [docs/usage.md](docs/usage.md) — full API guide with code examples
-- [examples/reference_example_app.py](examples/reference_example_app.py) — interactive reference app
+- [examples/reference_example_app.py](https://codeberg.org/marvin1099/python-global-shortcut-portal/src/branch/main/examples/reference_example_app.py) — interactive reference app
 
 ## Quick Start
 
 ```python
 import asyncio
-from global_shortcut_portal import GlobalShortcutsSession, Portal, Shortcut, SessionCallback
+from global_shortcut_portal import (
+    GlobalShortcutsSession,
+    Portal,
+    Shortcut,
+    SessionCallback,
+)
+
 
 class MyCallback(SessionCallback):
     def on_activated(self, event):
@@ -68,6 +77,7 @@ class MyCallback(SessionCallback):
 
     def on_deactivated(self, event):
         print(f"Shortcut deactivated: {event.shortcut_id}")
+
 
 async def main():
     portal = Portal()
@@ -84,7 +94,7 @@ async def main():
         Shortcut(
             id="toggle-overlay",
             description="Toggle overlay window",
-            preferred_trigger="<Control><Alt>space",
+            preferred_trigger="CTRL+ALT+SPACE",
         ),
     ]
     bound = await session.bind(shortcuts)
@@ -92,6 +102,7 @@ async def main():
         print(f"Bound: {s.id} -> {s.trigger_description}")
 
     await asyncio.Event().wait()
+
 
 asyncio.run(main())
 ```
@@ -107,7 +118,12 @@ asyncio.run(main())
 
 ## Notes
 
+- **BindShortcuts is only allowed once per session.** There is no portal method
+  to unbind or update a bound shortcut; use the native config dialog or create
+  a new session to change the set.
 - **Desktop environment persistence**: Some DEs (notably Plasma/KDE) persist
-  shortcut triggers per `app_id`. Once registered, `BindShortcuts` cannot
-  overwrite these stored values. Use the native config dialog or remove
-  entries in System Settings > Keyboard > Shortcuts while the app is closed.
+  shortcut triggers per `app_id`. A reset session + rebind works per spec: the
+  new bind set replaces the old one, so a shortcut missing from the new set is
+  removed. But a shortcut that is still bound (same ID) keeps its stored
+  trigger — to change one, first bind a set without it, then reset again and
+  rebind the full set with the new trigger.

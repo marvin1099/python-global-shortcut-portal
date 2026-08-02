@@ -4,11 +4,18 @@
 
 ```python
 import asyncio
-from global_shortcut_portal import Portal, GlobalShortcutsSession, Shortcut, SessionCallback
+from global_shortcut_portal import (
+    Portal,
+    GlobalShortcutsSession,
+    Shortcut,
+    SessionCallback,
+)
+
 
 class MyCallback(SessionCallback):
     def on_activated(self, event):
         print(f"Activated: {event.shortcut_id}")
+
 
 async def main():
     portal = Portal()
@@ -60,12 +67,12 @@ shortcuts = [
     Shortcut(
         id="toggle-sidebar",
         description="Toggle the sidebar",
-        preferred_trigger="<Control><Alt>space",
+        preferred_trigger="CTRL+ALT+SPACE",
     ),
     Shortcut(
         id="save-snapshot",
         description="Save a screenshot",
-        preferred_trigger="<Control><Shift>s",
+        preferred_trigger="CTRL+SHIFT+S",
     ),
 ]
 
@@ -81,6 +88,11 @@ Each `Shortcut` has:
 
 `bind()` returns a list of `BoundShortcut` objects reflecting what the
 compositor actually assigned.
+
+> **BindShortcuts is only allowed once per session.** The portal spec states:
+> *"An application can only attempt bind shortcuts of a session once."*
+> To bind a different or larger set of shortcuts, create a **new session**
+> (`connect()` a fresh `GlobalShortcutsSession`, or close + recreate yours).
 
 ### 4. Handle signals
 
@@ -130,7 +142,21 @@ for s in current:
     print(f"  {s.id}: {s.trigger_description}")
 ```
 
-### 7. Close the session
+### 7. Remove or change shortcuts
+
+There is **no portal method** to unbind or update an already-bound shortcut.
+Once bound, a shortcut can only be removed or re-triggered by the user via the
+DE's native config dialog (`configure()`) or its keyboard settings.
+
+If your app truly needs a different set of shortcuts at runtime, the
+spec-compliant approach is to reset the session and bind the new set —
+on Plasma this works as the spec describes. But a shortcut that is still
+bound (same ID) keeps its trigger: it is never changed in place. To
+change a shortcut's trigger you must first remove it (reset, then bind a
+set without it), then reset again and rebind the full set with the new
+trigger.
+
+### 8. Close the session
 
 ```python
 await session.close()
@@ -146,18 +172,20 @@ Shortcut triggers follow the
 [XDG Shortcuts Specification](https://specifications.freedesktop.org/shortcuts-spec/latest/):
 
 ```
-[modifier][+modifier]+key
+MODIFIER[+MODIFIER]+key
 ```
 
-Modifiers (case-insensitive): `CTRL`, `ALT`, `SHIFT`, `LOGO` (Super/Windows), `NUM`
+Modifiers (uppercase): `CTRL`, `ALT`, `SHIFT`, `LOGO` (Super/Windows), `NUM`.
+Note: this is **not** the GTK accelerator syntax (`<Control><Alt>space` is
+invalid here and is silently ignored by some backends).
 
 Key names are xkbcommon identifiers without the `XKB_KEY_` prefix:
 `a`, `space`, `Return`, `F1`, `Page_Up`, etc.
 
 Examples:
-- `<Control><Alt>space`
-- `<Control><Shift>a`
-- `<LOGO>Return`
+- `CTRL+ALT+SPACE`
+- `CTRL+SHIFT+A`
+- `LOGO+RETURN`
 
 The utility module provides helpers:
 
@@ -179,20 +207,19 @@ the DE remembers that trigger — even across session closes and rebinds.
 
 This means:
 
-- `bind()` with a different trigger for an existing ID is **ignored** by Plasma
-- `unbind_all()` (sends an empty shortcut list) does **not** clear persistent
-  entries
-- `close()` + `connect()` with the same `app_id` restores the old persisted
-  triggers
-
-**The only way to fully remove persistent entries** is to close the app and
-delete them in the DE's shortcut settings (e.g. System Settings > Keyboard >
-Shortcuts) while the app is not running.
+- a reset session + rebind works as the spec describes: the new bind set
+  replaces the previous one, so binding a set without a shortcut ID removes
+  that shortcut
+- `bind()` with a different trigger for an existing ID is **ignored** by
+  Plasma: the stored trigger wins until the shortcut is removed
+- changing a shortcut therefore needs two steps: reset and bind a set without
+  it (removing it), then reset again and rebind the full set with the new
+  trigger
 
 ## Example app
 
-The repository includes
-[`examples/reference_example_app.py`](../examples/reference_example_app.py) — a fully-commented
+The reference implementation is at
+[`examples/reference_example_app.py`](https://codeberg.org/marvin1099/python-global-shortcut-portal/src/branch/main/examples/reference_example_app.py) — a fully-commented
 interactive application that demonstrates the complete lifecycle, including
-session reset, config dialog, empty-placeholder registration, and DE
-persistence hints.
+session reset, config dialog, empty-placeholder registration, shortcut
+listing, and DE persistence hints.
