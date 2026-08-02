@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -42,7 +43,8 @@ def mock_bus():
 
 
 @pytest.fixture
-def portal(mock_bus):
+def portal(mock_bus, monkeypatch):
+    monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/fake-bus")
     patcher = patch("global_shortcut_portal.portal.MessageBus", return_value=mock_bus)
     patcher.start()
     p = Portal()
@@ -81,6 +83,30 @@ class TestPortalConnection:
         assert portal.connected is False
         assert portal._bus is None
         mock_bus.disconnect.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_connect_missing_session_bus(self, monkeypatch):
+        monkeypatch.delenv("DBUS_SESSION_BUS_ADDRESS", raising=False)
+        p = Portal()
+        with pytest.raises(PortalCallError, match="DBUS_SESSION_BUS_ADDRESS"):
+            await p.connect()
+
+    @pytest.mark.asyncio
+    async def test_connect_missing_session_bus_flatpak_hint(self, monkeypatch):
+        monkeypatch.delenv("DBUS_SESSION_BUS_ADDRESS", raising=False)
+        monkeypatch.setenv("FLATPAK_ID", "org.example.App")
+        p = Portal()
+        with pytest.raises(PortalCallError, match="Running inside Flatpak"):
+            await p.connect()
+
+    @pytest.mark.asyncio
+    async def test_connect_dbus_failure(self, monkeypatch, mock_bus):
+        monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/fake-bus")
+        mock_bus.connect.side_effect = Exception("boom")
+        with patch("global_shortcut_portal.portal.MessageBus", return_value=mock_bus):
+            p = Portal()
+            with pytest.raises(PortalCallError, match="boom"):
+                await p.connect()
 
 
 class TestPortalCalls:
@@ -429,6 +455,40 @@ class TestMessageBody:
             "each D-Bus struct must be a list, not tuple"
         )
         assert dbus_shortcuts[0][0] == "toggle"
+
+
+class TestAwaitResponseCloseRace:
+    @pytest.mark.asyncio
+    async def test_bus_closed_while_pending_does_not_crash(self, portal, mock_bus):
+        portal._bus = mock_bus
+        portal._connected = True
+        portal._unique_name = ":1.123"
+        captured = {}
+
+        def record_handler(handler):
+            captured["handler"] = handler
+
+        mock_bus.add_message_handler.side_effect = record_handler
+
+        async def wait_with_close():
+            task = asyncio.create_task(portal._await_response("/request/x"))
+            await asyncio.sleep(0)
+            handler = captured["handler"]
+            handler(
+                _fake_msg(
+                    [0, {}],
+                    path="/request/x",
+                    interface="org.freedesktop.portal.Request",
+                    member="Response",
+                )
+            )
+            portal._bus = None
+            await asyncio.sleep(0)
+            return await task
+
+        results = await wait_with_close()
+        assert results == {}
+        mock_bus.remove_message_handler.assert_not_called()
 
 
 class TestCloseSessionSubscriptions:

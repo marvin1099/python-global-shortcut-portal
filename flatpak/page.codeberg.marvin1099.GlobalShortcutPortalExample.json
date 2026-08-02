@@ -1,0 +1,66 @@
+{
+    "app-id": "page.codeberg.marvin1099.GlobalShortcutPortalExample",
+    "runtime": "org.freedesktop.Platform",
+    "runtime-version": "24.08",
+    "sdk": "org.freedesktop.Sdk",
+    "command": "global-shortcut-example",
+    "finish-args": [
+        "--socket=wayland",
+        "--socket=fallback-x11",
+        "--share=ipc"
+    ],
+    "modules": [
+        {
+            "name": "python3-dbus-next",
+            "buildsystem": "simple",
+            "build-options": {
+                "build-args": [
+                    "--share=network"
+                ]
+            },
+            "build-commands": [
+                "pip3 install --prefix=/app --no-deps dbus_next",
+                "chmod -R go-w /app 2>/dev/null || true"
+            ]
+        },
+        {
+            "name": "python3-global-shortcut-portal",
+            "buildsystem": "simple",
+            "build-options": {
+                "build-args": [
+                    "--share=network"
+                ]
+            },
+            "build-commands": [
+                "chmod -R u+rwX,go-w .",
+                "pip3 install --prefix=/app --no-deps .",
+                "chmod -R go-w /app 2>/dev/null || true"
+            ],
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": ".."
+                }
+            ]
+        },
+        {
+            "name": "global-shortcut-example",
+            "buildsystem": "simple",
+            "build-commands": [
+                "install -Dm755 global-shortcut-example /app/bin/global-shortcut-example",
+                "install -Dm644 reference_example_app.py /app/share/global-shortcut-portal-example/reference_example_app.py",
+                "chmod -R go-w /app 2>/dev/null || true"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "path": "global-shortcut-example"
+                },
+                {
+                    "type": "file",
+                    "path": "../examples/reference_example_app.py"
+                }
+            ]
+        }
+    ]
+}

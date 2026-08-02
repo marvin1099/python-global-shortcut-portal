@@ -1,0 +1,6 @@
+#!/bin/sh
+# Wrapper that runs the reference example app inside the Flatpak sandbox.
+# pip installs to /app/lib/pythonX.Y/site-packages; point Python at it.
+PYVER=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+export PYTHONPATH="/app/lib/python${PYVER}/site-packages${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 /app/share/global-shortcut-portal-example/reference_example_app.py "$@"

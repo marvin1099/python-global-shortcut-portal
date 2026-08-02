@@ -1,3 +1,11 @@
+from global_shortcut_portal.environment import (
+    EnvironmentInfo,
+    check_environment,
+    flatpak_id,
+    is_flatpak,
+    portal_app_id,
+    session_type,
+)
 from global_shortcut_portal.exceptions import (
     PortalCallError,
     PortalError,
@@ -11,6 +19,7 @@ from global_shortcut_portal.utils import format_shortcut_trigger, parse_shortcut
 
 __all__ = [
     "BoundShortcut",
+    "EnvironmentInfo",
     "GlobalShortcutsSession",
     "Portal",
     "PortalCallError",
@@ -20,6 +29,11 @@ __all__ = [
     "SessionError",
     "Shortcut",
     "ShortcutEvent",
+    "check_environment",
+    "flatpak_id",
     "format_shortcut_trigger",
+    "is_flatpak",
     "parse_shortcut_trigger",
+    "portal_app_id",
+    "session_type",
 ]

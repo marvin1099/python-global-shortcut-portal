@@ -53,10 +53,28 @@ complete session lifecycle with interactive controls:
 python examples/reference_example_app.py
 ```
 
+## Flatpak
+
+xdg-desktop-portal was built for sandboxed apps, so this library runs unchanged
+inside a Flatpak sandbox — portal access is granted by default, no D-Bus
+permissions needed (see [docs/flatpak.md](docs/flatpak.md)). The only difference
+is the app ID: the portal attributes shortcuts to the sandbox app ID
+(`$FLATPAK_ID`). The library ships small detection helpers (`is_flatpak()`,
+`flatpak_id()`, `portal_app_id()`, `session_type()`) for apps that need to know.
+
+A ready-to-build Flatpak for the reference example lives in `flatpak/`:
+
+```bash
+flatpak-builder --force-clean --user --install flatpak/build \
+  flatpak/page.codeberg.marvin1099.GlobalShortcutPortalExample.json
+flatpak run page.codeberg.marvin1099.GlobalShortcutPortalExample
+```
+
 ## Documentation
 
-- [docs/overview.md](docs/overview.md) — the Global Shortcut Portal and this library
-- [docs/usage.md](docs/usage.md) — full API guide with code examples
+- [docs/overview.md](https://codeberg.org/marvin1099/python-global-shortcut-portal/src/branch/main/docs/overview.md) — the Global Shortcut Portal and this library
+- [docs/usage.md](https://codeberg.org/marvin1099/python-global-shortcut-portal/src/branch/main/docs/usage.md) — full API guide with code examples
+- [docs/flatpak.md](https://codeberg.org/marvin1099/python-global-shortcut-portal/src/branch/main/docs/flatpak.md) — running the library from a Flatpak sandbox
 - [examples/reference_example_app.py](https://codeberg.org/marvin1099/python-global-shortcut-portal/src/branch/main/examples/reference_example_app.py) — interactive reference app
 
 ## Quick Start

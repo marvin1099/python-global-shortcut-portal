@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from collections.abc import Callable
 
 from dbus_next import Message, MessageType, Variant
 from dbus_next.aio import MessageBus
 
+from global_shortcut_portal.environment import FLATPAK_HINT, is_flatpak
 from global_shortcut_portal.exceptions import PortalCallError, PortalResponseError
 
 logger = logging.getLogger(__name__)
@@ -48,7 +50,19 @@ class Portal:
         """Open a connection to the session D-Bus bus."""
         if self._connected:
             return
-        self._bus = await MessageBus().connect()
+        if "DBUS_SESSION_BUS_ADDRESS" not in os.environ:
+            message = (
+                "No D-Bus session bus available: DBUS_SESSION_BUS_ADDRESS is not set."
+            )
+            if is_flatpak():
+                message += FLATPAK_HINT
+            raise PortalCallError(message)
+        try:
+            self._bus = await MessageBus().connect()
+        except Exception as exc:
+            raise PortalCallError(
+                f"Failed to connect to the session D-Bus bus: {exc}"
+            ) from exc
         self._unique_name = self._bus.unique_name
         self._connected = True
         logger.info("Connected to session D-Bus as %s", self._unique_name)
@@ -256,7 +270,8 @@ class Portal:
         except asyncio.TimeoutError:
             raise PortalCallError("Timed out waiting for portal response")
         finally:
-            self._bus.remove_message_handler(handler)
+            if self._bus:
+                self._bus.remove_message_handler(handler)
 
         if not _response_ok(response_code):
             raise PortalResponseError(response_code)
